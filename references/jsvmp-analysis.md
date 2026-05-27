@@ -52,8 +52,8 @@ function _0xefgh() {
 
 ```
 MCP 操作（推荐顺序）：
-  - scripts(action='list') → 找到异常大的 JS 文件（100KB+） <!-- v3.1.0: migrated from list_scripts -->
-  - search_code(keyword='switch', script_url=<大 JS 的 url>, context_chars=500)   ← v0.4.0 推荐首选 <!-- v3.1.0: migrated from find_dispatch_loops -->
+  - scripts(action='list') → 找到异常大的 JS 文件（100KB+） <!-- v3.1.0: migrated from search_source(scope='scripts') -->
+  - search_code(keyword='switch', script_url=<大 JS 的 url>, context_chars=500)   ← v0.4.0 推荐首选 <!-- v3.1.0: migrated from hook_jsvmp_interpreter(mode='transparent') -->
     → 返回 candidates: [{fn_name, case_count, char_range, preview}]
     → case_count > 50 的基本确认是 VMP 解释器
   - dump_jsvmp_strings(script_url=<大 JS 的 url>) → 提取字符串数组
@@ -86,12 +86,12 @@ MCP 操作（推荐顺序）：
               中间层 ──→  ┌─┘   └─┐ ──→ 追踪执行链路
                          │
   ┌── 第二板斧 插桩解释器 ────────────┐   ┌── 第四板斧 源码级插桩 ──────────┐
-  │  search_code(keyword='switch',   │   │  instrumentation(action='install')│ <!-- v3.1.0: migrated from find_dispatch_loops, instrument_jsvmp_source -->
+  │  search_code(keyword='switch',   │   │  instrumentation(action='install')│ <!-- v3.1.0: migrated from hook_jsvmp_interpreter(mode='transparent'), instrument_jsvmp_source -->
   │    script_url=..., context_chars) │   │  instrumentation(action='log')   │ <!-- v3.1.0: migrated from get_instrumentation_log -->
   │  hook_function(mode='trace',     │   │  → summary.hot_keys             │ <!-- v3.1.0: migrated from trace_function -->
   │    分发函数/子函数)              │   │  → summary.hot_methods          │
   │  hook_jsvmp_interpreter          │   │  → summary.hot_functions        │
-  │    (mode='proxy', trackProps=True)│   └────────┬────────────────────────┘ <!-- v3.1.0: migrated from trace_property_access -->
+  │    (mode='proxy', trackProps=True)│   └────────┬────────────────────────┘ <!-- v3.1.0: migrated from hook_jsvmp_interpreter(mode='proxy', trackProps=True) -->
                                           └────────┬────────────────────────┘
                                                    │
                             ↓                      ↓
@@ -118,7 +118,7 @@ MCP 操作（推荐顺序）：
 ### 快速路径：v0.4.0 黄金 8 步流程（推荐先试，70%+ RS/Akamai/webmssdk 场景直接搞定）
 
 ```
-Step 1 — search_code(keyword='switch', script_url=..., context_chars=500) 确认 VMP + 记下 fn_name / char_range <!-- v3.1.0: migrated from find_dispatch_loops -->
+Step 1 — search_code(keyword='switch', script_url=..., context_chars=500) 确认 VMP + 记下 fn_name / char_range <!-- v3.1.0: migrated from hook_jsvmp_interpreter(mode='transparent') -->
 Step 2 — hook_jsvmp_interpreter(script_url=<VMP basename>) 装多路径探针
 Step 3 — inject_hook_preset("cookie", persistent=True) + inject_hook_preset("xhr", persistent=True)
 Step 4 — instrumentation(action='install', url_pattern="**/<VMP 文件>", mode="ast", tag="vmp1")  ← 核心新步 <!-- v3.1.0: migrated from instrument_jsvmp_source -->
@@ -298,7 +298,7 @@ MCP 操作：
 
 ```
 MCP 操作：
-  - hook_jsvmp_interpreter(mode='proxy', trackProps=True, target_expression="疑似签名容器对象") <!-- v3.1.0: migrated from trace_property_access -->
+  - hook_jsvmp_interpreter(mode='proxy', trackProps=True, target_expression="疑似签名容器对象") <!-- v3.1.0: migrated from hook_jsvmp_interpreter(mode='proxy', trackProps=True) -->
     → Proxy 级别属性访问追踪，自动记录读写操作
   - get_property_access_log → 获取属性访问记录
   - compare_env → 收集完整浏览器环境信息
@@ -447,7 +447,7 @@ MCP 操作：
   · 在 add_init_script 中保存原始引用，在 VM 重写之前
 
 - 或 Hook 网络层：
-  · network_capture(action='start') → 不依赖 JS 层 Hook，直接在协议层捕获 <!-- v3.1.0: migrated from start_network_capture -->
+  · network_capture(action='start') → 不依赖 JS 层 Hook，直接在协议层捕获 <!-- v3.1.0: migrated from network_capture(action='start') -->
   · list_network_requests → get_network_request → 获取完整请求详情
 ```
 
@@ -602,7 +602,7 @@ JSVMP 签名还原决策树：
 在 JSVMP 分析过程中，确保以下每项都已完成：
 
 **第一板斧 — Hook 出入口**：
-- [ ] `search_code(keyword='switch', script_url=..., context_chars=500)` 确认是 VMP（case_count > 50） <!-- v3.1.0: migrated from find_dispatch_loops -->
+- [ ] `search_code(keyword='switch', script_url=..., context_chars=500)` 确认是 VMP（case_count > 50） <!-- v3.1.0: migrated from hook_jsvmp_interpreter(mode='transparent') -->
 - [ ] `inject_hook_preset("xhr", persistent=True)` + `("fetch", persistent=True)` 捕获请求出口
 - [ ] `inject_hook_preset("cookie", persistent=True)` **原型链级** cookie hook（替代手写 Document.prototype.cookie 的做法）
 - [ ] `analyze_cookie_sources` 归因最终 cookie（HTTP vs JS）
@@ -613,7 +613,7 @@ JSVMP 签名还原决策树：
 **第二板斧 — 插桩解释器**：
 - [ ] `hook_jsvmp_interpreter(script_url=<VMP basename>)` 多路径探针（apply/call/bind + Reflect.*/Proxy）
 - [ ] 分层 `hook_function(mode='trace')`（粗 → 中 → 细，用 `max_captures` 限制日志量） <!-- v3.1.0: migrated from trace_function -->
-- [ ] `hook_jsvmp_interpreter(mode='proxy', trackProps=True, targets=["navigator.*", "screen.*", ...])` 监控签名容器 <!-- v3.1.0: migrated from trace_property_access -->
+- [ ] `hook_jsvmp_interpreter(mode='proxy', trackProps=True, targets=["navigator.*", "screen.*", ...])` 监控签名容器 <!-- v3.1.0: migrated from hook_jsvmp_interpreter(mode='proxy', trackProps=True) -->
 
 **第三板斧 — 日志分析**：
 - [ ] `get_jsvmp_log` + `get_trace_data` + `get_runtime_probe_log`（如果装了 runtime_probe）+ `get_console_logs`

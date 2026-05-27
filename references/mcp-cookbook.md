@@ -23,7 +23,7 @@
 | **精确搜索** | `search_code(..., script_url=...)` | 在指定脚本中搜索（前后 3 行上下文，适合大文件） | <!-- v3.1.0: migrated from search_code_in_script -->
 | **源码获取** | `scripts(action='get', ...)` | 获取指定脚本的代码 | <!-- v3.1.0: migrated from get_script_source -->
 | **源码保存** | `scripts(action='save', ...)` | 将脚本保存到本地文件 | <!-- v3.1.0: migrated from save_script -->
-| **脚本列表** | `scripts(action='list')` | 列出页面加载的所有脚本 | <!-- v3.1.0: migrated from list_scripts -->
+| **脚本列表** | `scripts(action='list')` | 列出页面加载的所有脚本 | <!-- v3.1.0: migrated from search_source(scope='scripts') -->
 | **执行 JS** | `evaluate_js` / `evaluate_js_handle` | 在页面执行任意 JS |
 | **加载前注入** | `add_init_script` | 页面加载前注入脚本（支持 `persistent` 跨导航重注入） |
 | **伪断点** | `set_breakpoint_via_hook` | 通过 Hook 设置伪断点（支持 `persistent` 持久化） |
@@ -33,12 +33,12 @@
 | **预设 Hook** | `inject_hook_preset` | 一键 Hook（xhr/fetch/crypto/websocket/debugger_bypass，默认持久化） |
 | **移除 Hook** | `remove_hooks` | 移除所有 Hook（支持 `keep_persistent` 保留持久化 Hook） |
 | **冻结原型** | `hook_function(..., mode='intercept', ...)` | 冻结任意原型方法，防止页面 JS 覆盖 Hook | <!-- v3.1.0: migrated from freeze_prototype -->
-| **属性追踪** | `hook_jsvmp_interpreter(mode='proxy', trackProps=True)` / `get_property_access_log` | Proxy 级别属性访问追踪 | <!-- v3.1.0: migrated from trace_property_access -->
+| **属性追踪** | `hook_jsvmp_interpreter(mode='proxy', trackProps=True)` / `get_property_access_log` | Proxy 级别属性访问追踪 | <!-- v3.1.0: migrated from hook_jsvmp_interpreter(mode='proxy', trackProps=True) -->
 | **JSVMP 插桩** | `hook_jsvmp_interpreter` | 一键插桩 JSVMP（Function.prototype.apply + 30+ 敏感属性） |
 | **JSVMP 日志** | `get_jsvmp_log` | 获取 JSVMP 日志（API 调用统计 + 属性读取摘要） |
 | **JSVMP 字符串** | `dump_jsvmp_strings` | 提取字符串数组，识别 API 名称，检测混淆模式 |
 | **环境采集** | `compare_env` | 全面收集浏览器环境（navigator/screen/canvas/WebGL/Audio/timing） |
-| **网络捕获** | `network_capture(action='start', ...)` / `network_capture(action='stop')` | 启停网络捕获（支持 `capture_body` 捕获响应体） | <!-- v3.1.0: migrated from start_network_capture / stop_network_capture -->
+| **网络捕获** | `network_capture(action='start', ...)` / `network_capture(action='stop')` | 启停网络捕获（支持 `capture_body` 捕获响应体） | <!-- v3.1.0: migrated from network_capture(action='start') / stop_network_capture -->
 | **网络请求** | `list_network_requests` | 列出捕获的请求 |
 | **请求详情** | `get_network_request` | 获取请求完整信息（含响应体） |
 | **请求来源** | `get_request_initiator` | 获取请求的 JS 调用栈（改进 URL 匹配 + 诊断信息） |
@@ -50,7 +50,7 @@
 | **指纹** | `get_fingerprint_info` | 检查浏览器指纹 |
 | **反检测** | `check_detection` | 测试是否被反爬识别 |
 | **反调试** | `bypass_debugger_trap` | 绕过 debugger 陷阱 |
-| **分发循环扫描** | `search_code(keyword='switch', script_url=..., context_chars=500)` | **[v0.4.0]** 定位字节码分发函数（while+switch，case 数过滤） | <!-- v3.1.0: migrated from find_dispatch_loops -->
+| **分发循环扫描** | `search_code(keyword='switch', script_url=..., context_chars=500)` | **[v0.4.0]** 定位字节码分发函数（while+switch，case 数过滤） | <!-- v3.1.0: migrated from hook_jsvmp_interpreter(mode='transparent') -->
 | **源码级插桩** | `instrumentation(action='install', ...)` | **[v0.4.0]** HTTP 层改写 VMP，每个 obj[key]/fn(args) 插入 tap（通用 VMP 利器） | <!-- v3.1.0: migrated from instrument_jsvmp_source -->
 | **插桩日志** | `instrumentation(action='log', ...)` | **[v0.4.0]** 拉取源码插桩日志，带 hot_keys/hot_methods/hot_functions 摘要 | <!-- v3.1.0: migrated from get_instrumentation_log -->
 | **插桩状态** | `instrumentation(action='status')` / `instrumentation(action='stop', ...)` | **[v0.4.0]** 查看/停止源码插桩 | <!-- v3.1.0: migrated from get_instrumentation_status / stop_instrumentation -->
@@ -77,7 +77,7 @@
   [camoufox-reverse] take_screenshot() → 确认页面正常
 
 步骤 4：开始网络捕获
-  [camoufox-reverse] network_capture(action='start') <!-- v3.1.0: migrated from start_network_capture -->
+  [camoufox-reverse] network_capture(action='start') <!-- v3.1.0: migrated from network_capture(action='start') -->
 
 步骤 5：触发数据请求（如翻页）
   [camoufox-reverse] click(selector=".next-page")
@@ -148,7 +148,7 @@
 
 ```
 步骤 1：列出所有脚本
-  [camoufox-reverse] scripts(action='list') <!-- v3.1.0: migrated from list_scripts -->
+  [camoufox-reverse] scripts(action='list') <!-- v3.1.0: migrated from search_source(scope='scripts') -->
   → 找到可疑的混淆脚本（通常文件名无意义或体积很大）
 
 步骤 2：保存混淆脚本到本地
@@ -223,7 +223,7 @@
 ```
 步骤 1：启动浏览器 + 开启响应体捕获
   [camoufox-reverse] launch_browser(headless=False)
-  [camoufox-reverse] network_capture(action='start', capture_body=True) <!-- v3.1.0: migrated from start_network_capture -->
+  [camoufox-reverse] network_capture(action='start', capture_body=True) <!-- v3.1.0: migrated from network_capture(action='start') -->
 
 步骤 2：第一次导航定位 VMP 脚本
   [camoufox-reverse] navigate(url="https://target.com/")
@@ -231,7 +231,7 @@
   → 找最大的 JS（100KB+，通常是 sdenv-*.js / FuckCookie_*.js / webmssdk.es5.js）
 
 步骤 3：确认是 VMP
-  [camoufox-reverse] search_code(keyword='switch', script_url="https://target.com/xxx/sdenv-xxx.js", context_chars=500) <!-- v3.1.0: migrated from find_dispatch_loops -->
+  [camoufox-reverse] search_code(keyword='switch', script_url="https://target.com/xxx/sdenv-xxx.js", context_chars=500) <!-- v3.1.0: migrated from hook_jsvmp_interpreter(mode='transparent') -->
     min_case_count=20
   )
   → case_count > 50 基本确认是 VMP
@@ -303,7 +303,7 @@
 ```
 步骤 1：启动环境 + 开启响应体捕获 + cookie hook
   [camoufox-reverse] launch_browser(headless=False)
-  [camoufox-reverse] network_capture(action='start', capture_body=True) <!-- v3.1.0: migrated from start_network_capture -->
+  [camoufox-reverse] network_capture(action='start', capture_body=True) <!-- v3.1.0: migrated from network_capture(action='start') -->
   [camoufox-reverse] inject_hook_preset(preset="cookie", persistent=True)   # 原型链级
 
 步骤 2：导航到目标（首屏有挑战用 pre_inject_hooks）
@@ -434,7 +434,7 @@ await navigate(url, pre_inject_hooks=["jsvmp_probe_transparent"])
 ### 使用属性访问追踪
 
 ```
-[camoufox-reverse] hook_jsvmp_interpreter(mode='proxy', trackProps=True, target_expression="navigator") <!-- v3.1.0: migrated from trace_property_access -->
+[camoufox-reverse] hook_jsvmp_interpreter(mode='proxy', trackProps=True, target_expression="navigator") <!-- v3.1.0: migrated from hook_jsvmp_interpreter(mode='proxy', trackProps=True) -->
   触发操作...
 [camoufox-reverse] get_property_access_log        → 查看 navigator 的哪些属性被读取
 ```
@@ -487,7 +487,7 @@ await navigate(url, pre_inject_hooks=["jsvmp_probe_transparent"])
 
 ```
 # 1. 先确认是不是 VMP（case_count > 50 基本是）
-[camoufox-reverse] search_code(keyword='switch', script_url="https://target.com/sdenv-xxx.js", context_chars=500) <!-- v3.1.0: migrated from find_dispatch_loops -->
+[camoufox-reverse] search_code(keyword='switch', script_url="https://target.com/sdenv-xxx.js", context_chars=500) <!-- v3.1.0: migrated from hook_jsvmp_interpreter(mode='transparent') -->
 
 # 2. 装插桩（AST 模式优先，需 CDN；regex 模式兜底）
 [camoufox-reverse] instrumentation(action='install', <!-- v3.1.0: migrated from instrument_jsvmp_source -->
@@ -555,7 +555,7 @@ await instrumentation(action='install', url_pattern="**/vmp.js", mode="ast_page"
 
 ```
 # 1. 前置条件：网络抓包 + cookie hook 同时开
-[camoufox-reverse] network_capture(action='start', capture_body=True) <!-- v3.1.0: migrated from start_network_capture -->
+[camoufox-reverse] network_capture(action='start', capture_body=True) <!-- v3.1.0: migrated from network_capture(action='start') -->
 [camoufox-reverse] inject_hook_preset(preset="cookie", persistent=True)
 
 # 2. 触发场景
@@ -618,15 +618,15 @@ await instrumentation(action='install', url_pattern="**/vmp.js", mode="ast_page"
 | 页面导航 | `navigate` `reload` `go_back` | 导航控制 |
 | 页面交互 | `click` `type_text` `wait_for` | UI 自动化 |
 | 页面状态 | `get_page_info` `take_screenshot` `take_snapshot` `get_page_html` | 页面信息 |
-| 源码分析 | `scripts(action='list')` `scripts(action='get', ...)` `search_code` `search_code(..., script_url=...)` `scripts(action='save', ...)` | JS 逆向核心 | <!-- v3.1.0: migrated from list_scripts, get_script_source, search_code_in_script, save_script -->
+| 源码分析 | `scripts(action='list')` `scripts(action='get', ...)` `search_code` `search_code(..., script_url=...)` `scripts(action='save', ...)` | JS 逆向核心 | <!-- v3.1.0: migrated from search_source(scope='scripts'), get_script_source, search_code_in_script, save_script -->
 | JS 执行 | `evaluate_js` `evaluate_js_handle` `add_init_script` | 代码执行（支持持久化） |
 | 调试 | `set_breakpoint_via_hook` `get_breakpoint_data` `get_console_logs` | 伪断点调试（支持持久化） |
 | Hook | `hook_function(..., mode='trace', ...)` `get_trace_data` `hook_function` `inject_hook_preset` `remove_hooks` `hook_function(..., mode='intercept', ...)` | 函数 Hook（支持持久化 + 防覆盖） | <!-- v3.1.0: migrated from trace_function, freeze_prototype -->
-| 属性追踪 | `hook_jsvmp_interpreter(mode='proxy', trackProps=True)` `get_property_access_log` | Proxy 级别属性访问监控 | <!-- v3.1.0: migrated from trace_property_access -->
+| 属性追踪 | `hook_jsvmp_interpreter(mode='proxy', trackProps=True)` `get_property_access_log` | Proxy 级别属性访问监控 | <!-- v3.1.0: migrated from hook_jsvmp_interpreter(mode='proxy', trackProps=True) -->
 | JSVMP 专项 | `hook_jsvmp_interpreter` `get_jsvmp_log` `dump_jsvmp_strings` `compare_env` | JSVMP 虚拟机保护分析 |
-| 网络 | `network_capture(action='start', ...)` `network_capture(action='stop')` `list_network_requests` `get_network_request` `get_request_initiator` `intercept_request` `stop_intercept` | 网络分析（支持响应体捕获） | <!-- v3.1.0: migrated from start_network_capture, stop_network_capture -->
+| 网络 | `network_capture(action='start', ...)` `network_capture(action='stop')` `list_network_requests` `get_network_request` `get_request_initiator` `intercept_request` `stop_intercept` | 网络分析（支持响应体捕获） | <!-- v3.1.0: migrated from network_capture(action='start'), stop_network_capture -->
 | 存储 | `cookies(action='get', ...)` `cookies(action='set', ...)` `delete_cookies` `get_storage` `set_storage` `export_state` `import_state` | 状态管理 | <!-- v3.1.0: migrated from get_cookies, set_cookies -->
 | 反检测 | `get_fingerprint_info` `check_detection` `bypass_debugger_trap` | 指纹与反检测 |
-| 源码级插桩 | `instrumentation(action='install', ...)` `instrumentation(action='log', ...)` `instrumentation(action='status')` `instrumentation(action='stop', ...)` `search_code(keyword='switch', script_url=..., context_chars=500)` | **[v0.4.0]** 通用 JSVMP 逆向利器 | <!-- v3.1.0: migrated from instrument_jsvmp_source, get_instrumentation_log, get_instrumentation_status, stop_instrumentation, find_dispatch_loops -->
+| 源码级插桩 | `instrumentation(action='install', ...)` `instrumentation(action='log', ...)` `instrumentation(action='status')` `instrumentation(action='stop', ...)` `search_code(keyword='switch', script_url=..., context_chars=500)` | **[v0.4.0]** 通用 JSVMP 逆向利器 | <!-- v3.1.0: migrated from instrument_jsvmp_source, get_instrumentation_log, get_instrumentation_status, stop_instrumentation, hook_jsvmp_interpreter(mode='transparent') -->
 | Cookie 归因 | `analyze_cookie_sources` | **[v0.4.0]** HTTP Set-Cookie + JS 写入融合分析 |
 | 导航增强 | `navigate(pre_inject_hooks)` `instrumentation(action='reload')` `get_runtime_probe_log` | **[v0.4.0]** 首屏挑战/hook 重注入/运行时探针 | <!-- v3.1.0: migrated from reload_with_hooks -->

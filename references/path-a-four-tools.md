@@ -21,7 +21,7 @@
 | 板斧 | 名称 | 工具 | 擅长 | 不擅长 | 适用反爬类型 |
 |------|------|------|------|--------|-------------|
 | 第一斧 | Hook I/O | `inject_hook_preset(xhr/fetch/crypto/cookie)` + `hook_function('X.prototype.Y', mode='intercept', ...)` <!-- v3.1.0: migrated from freeze_prototype --> | 请求链路劫持、动态 Cookie、加密原语入口 | VM 内部自实现的 MD5/AES | 行为型 ✅ / 纯混淆 ✅ / 签名型 ❌ |
-| 第二斧 | 插桩解释器 | `hook_function(path, mode='trace', ...)` <!-- v3.1.0: migrated from trace_function --> + `hook_jsvmp_interpreter(mode='proxy', trackProps=True)` <!-- v3.1.0: migrated from trace_property_access --> | 能识别分发函数名时的调用链追踪 | 匿名 IIFE 包裹 + 高频日志爆炸 | 行为型 ✅ / 纯混淆 ✅ / 签名型 ❌ |
+| 第二斧 | 插桩解释器 | `hook_function(path, mode='trace', ...)` <!-- v3.1.0: migrated from trace_function --> + `hook_jsvmp_interpreter(mode='proxy', trackProps=True)` <!-- v3.1.0: migrated from hook_jsvmp_interpreter(mode='proxy', trackProps=True) --> | 能识别分发函数名时的调用链追踪 | 匿名 IIFE 包裹 + 高频日志爆炸 | 行为型 ✅ / 纯混淆 ✅ / 签名型 ❌ |
 | 第三斧 | 日志分析 | `get_jsvmp_log` + 反向追踪 | 已能捕获签名值 I/O 时反推公式 | 签名完全不出 VM 的黑箱模式 | 所有类型 ✅（纯被动分析，无副作用） |
 | 第四斧 | 源码级插桩 | `instrumentation(action='install', ...)` <!-- v3.1.0: migrated from instrument_jsvmp_source --> + `instrumentation(action='log', ...)` <!-- v3.1.0: migrated from get_instrumentation_log --> | VM 内部调度、"全部在 opcode dispatch 循环里发生"的场景，`hot_keys` 直接暴露环境指纹集 | 极限大文件（5MB+）regex 模式覆盖率下降；AST 模式需 CDN | 所有类型 ✅，**签名型首选** |
 
@@ -44,7 +44,7 @@
 ```
 步骤 1：确认是否 VMP
   search_code(keyword='switch', script_url='<VMP脚本URL>', context_chars=500)
-  <!-- v3.1.0: migrated from find_dispatch_loops -->
+  <!-- v3.1.0: migrated from hook_jsvmp_interpreter(mode='transparent') -->
   → case_count > 50 基本确认是 VMP
 
 步骤 2：一键装通用探针
@@ -148,7 +148,7 @@ MCP 操作：
 ```
 MCP 操作：
   search_code(keyword='switch', script_url='<VMP脚本URL>', context_chars=500)
-  <!-- v3.1.0: migrated from find_dispatch_loops -->
+  <!-- v3.1.0: migrated from hook_jsvmp_interpreter(mode='transparent') -->
   → 定位 case_count > 20 的 switch 语句
   → case_count > 50 基本确认是 VMP 解释器
 ```
@@ -193,7 +193,7 @@ MCP 操作（粗粒度 → 中粒度 → 细粒度）：
 ```
 MCP 操作：
   hook_jsvmp_interpreter(mode='proxy', trackProps=True)
-  <!-- v3.1.0: migrated from trace_property_access -->
+  <!-- v3.1.0: migrated from hook_jsvmp_interpreter(mode='proxy', trackProps=True) -->
   → 监控 navigator.*/screen.*/document.cookie 等签名容器的属性读取
 
   compare_env()

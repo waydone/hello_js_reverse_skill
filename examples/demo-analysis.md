@@ -17,7 +17,7 @@
 ```
 [camoufox-reverse] launch_browser()
 [camoufox-reverse] navigate(url="https://example.com/data")
-[camoufox-reverse] start_network_capture()
+[camoufox-reverse] network_capture(action='start')()
 
 → 触发翻页交互
 [camoufox-reverse] click(selector=".next-page")

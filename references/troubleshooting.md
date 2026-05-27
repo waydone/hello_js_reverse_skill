@@ -28,7 +28,7 @@
   │   · 检查前置请求的响应中是否有 Token、Session ID
   │
   ├─ MCP 辅助：
-  │   · start_network_capture → 触发操作 → list_network_requests
+  │   · network_capture(action='start') → 触发操作 → list_network_requests
   │   · 按时间排序，找到主请求之前的接口
   │
   └─ 常见原因：漏掉预热接口、Token 获取接口、验证码初始化接口
@@ -221,7 +221,7 @@
 
 | 排查场景 | MCP 工具 | 用法 |
 |---------|---------|------|
-| 对比请求差异 | `start_network_capture` + `get_network_request` | 在 Camoufox 中捕获真实请求，与脚本请求对比 |
+| 对比请求差异 | `network_capture(action='start')` + `get_network_request` | 在 Camoufox 中捕获真实请求，与脚本请求对比 |
 | 获取真实签名值 | `set_breakpoint_via_hook` + `get_breakpoint_data` | 在签名函数设伪断点，捕获真实入参和返回值 |
 | 验证环境检测 | `get_fingerprint_info` + `check_detection` | 确认哪些环境项参与校验 |
 | 追踪调用链 | `get_request_initiator` | 从请求直接定位到签名函数 |

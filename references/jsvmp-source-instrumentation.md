@@ -1,6 +1,6 @@
 # JSVMP 源码级插桩专项指南（第四板斧）
 
-> **v2.5.0 新增文档**。本指南讲解 camoufox-reverse MCP v0.4.0+ 提供的源码级插桩能力（`instrument_jsvmp_source` / `get_instrumentation_log` / `find_dispatch_loops`）的使用方法论，是 JSVMP 四板斧中"第四板斧"的完整说明。
+> **v2.5.0 新增文档**。本指南讲解 camoufox-reverse MCP v0.4.0+ 提供的源码级插桩能力（`instrument_jsvmp_source` / `get_instrumentation_log` / `hook_jsvmp_interpreter(mode='transparent')`）的使用方法论，是 JSVMP 四板斧中"第四板斧"的完整说明。
 >
 > 与 `jsvmp-analysis.md` 的第一/二/三板斧互补——前三板斧诊断"VM 看外界 / 外界看 VM"，本文档讲解"VM 看自己"。
 
@@ -139,7 +139,7 @@ __mcp_tap_call(fn, null, [args[0], args[1], ...], 'vmp1');
 ```
 Actions:
   launch_browser(headless=False)   # 有头调试，看浏览器行为
-  start_network_capture(capture_body=True)   # 抓响应体，后续 analyze_cookie_sources 需要
+  network_capture(action='start')(capture_body=True)   # 抓响应体，后续 analyze_cookie_sources 需要
 ```
 
 ### Step 2 — 第一次导航定位 VMP 脚本 URL
@@ -156,7 +156,7 @@ Actions:
 
 ```
 Actions:
-  find_dispatch_loops(script_url="<VMP_URL>", min_case_count=20)
+  hook_jsvmp_interpreter(mode='transparent')(script_url="<VMP_URL>", min_case_count=20)
   → 返回：
     {
       "candidates": [

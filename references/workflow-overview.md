@@ -136,7 +136,7 @@
 识别到 JSVMP（200KB+ 单文件 + while-switch 分发循环 + 字节码数组）时，不要走通用流程的第 4-7 步，改走下面这个分支：
 
 ```
-1. launch_browser(headless=False) + start_network_capture(capture_body=True)
+1. launch_browser(headless=False) + network_capture(action='start')(capture_body=True)
    ↓
 2. 导航前判断是否首屏挑战
    ├─ 是（RS 412 / Akamai 403 等）
@@ -144,7 +144,7 @@
    └─ 否
        → navigate(url=...) + 之后装 hook + reload_with_hooks()
    ↓
-3. find_dispatch_loops(script_url=<VMP_URL>) 确认 VMP（case_count > 50）
+3. hook_jsvmp_interpreter(mode='transparent')(script_url=<VMP_URL>) 确认 VMP（case_count > 50）
    ↓
 4. 同时装三路探针：
    ├─ 第一板斧（I/O 边界）：inject_hook_preset(cookie / xhr / fetch / crypto, persistent=True)

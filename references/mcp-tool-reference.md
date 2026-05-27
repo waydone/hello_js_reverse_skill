@@ -38,7 +38,7 @@
 
 | 工具名（v0.9.0） | 一行描述 |
 |-------------------|---------|
-| `network_capture(action='start'\|'stop')` <!-- v3.1.0: migrated from start_network_capture/stop_network_capture --> | 启停网络流量捕获，支持 capture_body=True |
+| `network_capture(action='start'\|'stop')` <!-- v3.1.0: migrated from network_capture(action='start')/stop_network_capture --> | 启停网络流量捕获，支持 capture_body=True |
 | `list_network_requests` | 列出捕获的请求（支持 URL/method/type/status 过滤） |
 | `get_network_request` | 获取请求完整详情（含响应体） |
 | `get_request_initiator` | 获取发起请求的 JS 调用栈（黄金路径） |
@@ -52,7 +52,7 @@
 
 | 工具名（v0.9.0） | 一行描述 |
 |-------------------|---------|
-| `scripts(action='list')` <!-- v3.1.0: migrated from list_scripts --> | 列出页面加载的所有 JS 脚本 |
+| `scripts(action='list')` <!-- v3.1.0: migrated from search_source(scope='scripts') --> | 列出页面加载的所有 JS 脚本 |
 | `scripts(action='get', url=...)` <!-- v3.1.0: migrated from get_script_source --> | 获取完整 JS 源码 |
 | `scripts(action='save', url=..., save_path=...)` <!-- v3.1.0: migrated from save_script --> | 保存 JS 文件到本地 |
 | `search_code` | 在所有已加载 JS 中搜索关键词（全局） |
@@ -80,7 +80,7 @@
 | 工具名（v0.9.0） | 一行描述 |
 |-------------------|---------|
 | `hook_jsvmp_interpreter` | 多路径通用探针（proxy/transparent 模式） |
-| `hook_jsvmp_interpreter(mode='proxy', trackProps=True)` <!-- v3.1.0: migrated from trace_property_access --> | Proxy 级别属性访问追踪 |
+| `hook_jsvmp_interpreter(mode='proxy', trackProps=True)` <!-- v3.1.0: migrated from hook_jsvmp_interpreter(mode='proxy', trackProps=True) --> | Proxy 级别属性访问追踪 |
 | `get_jsvmp_log` | 获取 JSVMP 探针日志 |
 | `dump_jsvmp_strings` | 提取 JSVMP 脚本中的字符串 |
 | `compare_env` | 采集浏览器环境指纹基准 |
@@ -122,7 +122,7 @@
 
 | v0.8.x 旧名 | v0.9.0 新名 | 说明 |
 |-------------|-------------|------|
-| `start_network_capture(capture_body=X)` | `network_capture(action='start', capture_body=X)` | 网络捕获启停合并 |
+| `network_capture(action='start')(capture_body=X)` | `network_capture(action='start', capture_body=X)` | 网络捕获启停合并 |
 | `stop_network_capture()` | `network_capture(action='stop')` | |
 | `search_code_in_script(url, keyword)` | `search_code(keyword, script_url=url)` | 合并到 search_code，script_url 可选参数 |
 | `trace_function(path, ...)` | `hook_function(path, mode='trace', ...)` | 追踪合并到 hook_function |
@@ -133,11 +133,11 @@
 | `reload_with_hooks()` | `instrumentation(action='reload')` | |
 | `get_cookies(...)` | `cookies(action='get', ...)` | Cookie 管理统一接口 |
 | `set_cookies(...)` | `cookies(action='set', ...)` | |
-| `list_scripts(...)` | `scripts(action='list', ...)` | 脚本管理统一接口 |
+| `search_source(scope='scripts')(...)` | `scripts(action='list', ...)` | 脚本管理统一接口 |
 | `get_script_source(url)` | `scripts(action='get', url=url)` | |
 | `save_script(url, path)` | `scripts(action='save', url=url, save_path=path)` | |
-| `find_dispatch_loops(url)` | `search_code(keyword='switch', script_url=url, context_chars=500)` | 合并到 search_code 的高级用法 |
-| `trace_property_access(...)` | `hook_jsvmp_interpreter(mode='proxy', trackProps=True)` | 合并到 hook_jsvmp_interpreter |
+| `hook_jsvmp_interpreter(mode='transparent')(url)` | `search_code(keyword='switch', script_url=url, context_chars=500)` | 合并到 search_code 的高级用法 |
+| `hook_jsvmp_interpreter(mode='proxy', trackProps=True)(...)` | `hook_jsvmp_interpreter(mode='proxy', trackProps=True)` | 合并到 hook_jsvmp_interpreter |
 | `freeze_prototype(class, method)` | `hook_function('class.prototype.method', mode='intercept', ...)` | 合并到 hook_function |
 | `get_page_content()` | `evaluate_js("document.documentElement.outerHTML")` | 用 evaluate_js 替代 |
 
@@ -147,8 +147,8 @@
 |-----------|---------|
 | `get_property_access_log` | `get_jsvmp_log(type_filter='prop_read')` |
 | `get_page_content` | `evaluate_js("document.documentElement.outerHTML")` <!-- v3.1.0: migrated from get_page_content --> |
-| `find_dispatch_loops` | `search_code(keyword='switch', script_url='<url>', context_chars=500)` |
-| `trace_property_access` | `hook_jsvmp_interpreter(mode='proxy', trackProps=True)` |
+| `hook_jsvmp_interpreter(mode='transparent')` | `search_code(keyword='switch', script_url='<url>', context_chars=500)` |
+| `hook_jsvmp_interpreter(mode='proxy', trackProps=True)` | `hook_jsvmp_interpreter(mode='proxy', trackProps=True)` |
 | `freeze_prototype` | `hook_function('X.prototype.Y', mode='intercept', non_overridable=True)` |
 | `check_csp_policy` | `evaluate_js("document.querySelector('meta[http-equiv=Content-Security-Policy]')?.content")` |
 | `get_response_chain` | `navigate()` 返回值中的 `redirect_chain` 字段 |

@@ -227,7 +227,7 @@ MCP 操作：
 ```
 MCP 操作：
   network_capture(action='start')
-  <!-- v3.1.0: migrated from start_network_capture -->
+  <!-- v3.1.0: migrated from network_capture(action='start') -->
   → 开始捕获网络流量
 
   evaluate_js / click / type_text
