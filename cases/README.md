@@ -10,7 +10,7 @@
 | 关键词（URL 域名 / 签名参数 / SDK 字符串） | 反爬类型 | 对应案例 / 目录 | 已验证方案 |
 |---|---|---|---|
 | `tiktok.com` / `X-Bogus` / `X-Gnarly` / `webmssdk` / `cacheOpts` | 行为型 | [`jsvmp-dual-sign-xhr-intercept-cacheOpts-jsdom-firefox.md`](./jsvmp-dual-sign-xhr-intercept-cacheOpts-jsdom-firefox.md) | jsdom 环境伪装 |
-| `douyin.com` / `a_bogus` / `_sdkGlueInit` | 行为型 | [`jsvmp-xhr-interceptor-env-emulation.md`](./jsvmp-xhr-interceptor-env-emulation.md) / (v3.0.0 待建 `jsvmp-abogus-douyin-webapp.md`) | vm 沙箱 + 自定义字符表 |
+| `douyin.com` / `a_bogus` / `_sdkGlueInit` | 行为型 | [`jsvmp-xhr-interceptor-env-emulation.md`](./jsvmp-xhr-interceptor-env-emulation.md) | vm 沙箱 + 自定义字符表 |
 | `nmpa.gov.cn` / `NfBCSins2OywS` / `NfBCSins2OywT` / `.e17ed02.js` / 412 挑战 | 签名型（RS 6） | [`jsvmp-ruishu6-cookie-412-sdenv.md`](./jsvmp-ruishu6-cookie-412-sdenv.md) + `site_nmpa/` 工作区目录 | sdenv 纯 Node.js |
 | `acmescripts` / `/akam/` | 签名型（Akamai） | (待建) | (待建) |
 | `acw_sc__v2` / Aliyun WAF | 签名型 | (待建) | (待建) |

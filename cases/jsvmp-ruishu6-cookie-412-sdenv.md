@@ -38,7 +38,7 @@
 快速检测命令（30秒内完成）：
   - search_code(keyword="$_ts") → 命中 + 存在 nsd/cd 字段 → 高置信度
   - search_code(keyword="_$") → 大量 _$ 前缀变量 → 辅助确认
-  - list_scripts → 存在 230KB+ 文件 → 辅助确认
+  - scripts(action='list') → 存在 230KB+ 文件 → 辅助确认
   - list_network_requests → 首次请求返回 412 → 高置信度
   - 检查 Set-Cookie 头 → 存在 acw_tc + XxxS 格式 Cookie → 直接定位本案例
   匹配判定：412 响应 + $_ts 配置 + _$ 前缀变量 → RS6 高置信度匹配

@@ -35,7 +35,7 @@
 快速检测命令（30秒内完成）：
   - search_code(keyword="关键词1") → 命中条件
   - search_code(keyword="关键词2") → 命中条件
-  - list_scripts → 文件体积条件
+  - scripts(action='list') → 文件体积条件
   匹配判定：以上 N 项中命中 M 项以上 → 高置信度匹配
 ```
 

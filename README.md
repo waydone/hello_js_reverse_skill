@@ -96,11 +96,15 @@ hello_js_reverse_skill/
 │
 ├── templates/                      # 项目模板（按解法模式和语言分类）
 │   ├── node-request/               # 模式A (Node.js)：纯算法还原
+│   │   ├── README.md
 │   │   ├── main.js
+│   │   ├── config/headers.json
+│   │   ├── config/keys.json
 │   │   ├── utils/encrypt.js
 │   │   ├── utils/request.js
 │   │   └── package.json
 │   ├── python-request/             # 模式A (Python)：纯算法还原
+│   │   ├── README.md
 │   │   ├── main.py
 │   │   ├── utils/sign.py
 │   │   ├── utils/request.py
@@ -108,16 +112,19 @@ hello_js_reverse_skill/
 │   │   ├── config/keys.json
 │   │   └── requirements.txt
 │   ├── vm-sandbox/                 # 模式B：VM 沙箱执行
+│   │   ├── README.md
 │   │   ├── main.js
 │   │   ├── utils/sandbox.js
 │   │   ├── utils/request.js
 │   │   └── package.json
 │   ├── wasm-loader/                # 模式C：WASM 加载还原
+│   │   ├── README.md
 │   │   ├── main.js
 │   │   ├── utils/wasm-loader.js
 │   │   ├── utils/env-patch.js
 │   │   └── package.json
-│   └── browser-auto/               # 模式D：浏览器自动化
+│   └── browser-auto/               # 模式D：浏览器自动化（仅分析/验证）
+│       ├── README.md
 │       ├── main.js
 │       └── package.json
 │
@@ -166,13 +173,14 @@ node scripts/sandbox-runner.js obfuscated.js --extract-cookie --verbose
 | 标准加密算法 | Python | `templates/python-request/` | 加密可用 hashlib/pycryptodome 还原 |
 | 动态 Cookie | Node.js | `templates/vm-sandbox/` | 服务端返回 JS 生成 Cookie |
 | WASM 加密 | Node.js | `templates/wasm-loader/` | 加密在 .wasm 中实现 |
-| TLS/环境依赖 | Node.js | `templates/browser-auto/` | 无法脱离浏览器环境 |
+| TLS/环境依赖 | Node.js | `templates/browser-auto/` | 定位和验证环境问题，不作为最终交付 |
 
 **Node.js 项目：**
 ```bash
 cp -r templates/node-request/ my_project/
 cd my_project && npm install
 # 修改 main.js 中的配置和加密逻辑
+# 可将请求头/密钥占位写入 config/headers.json 与 config/keys.json
 node main.js
 ```
 
@@ -186,7 +194,7 @@ python main.py
 
 ## MCP 工具集成
 
-本 Skill 围绕 [`camoufox-reverse` MCP](https://github.com/WhiteNightShadow/camoufox-reverse-mcp) 服务器组织能力（Camoufox 反检测浏览器，**32 个核心工具，v1.0.0 统一 API**）：
+本 Skill 围绕 [`camoufox-reverse` MCP](https://github.com/WhiteNightShadow/camoufox-reverse-mcp) 服务器组织能力（Camoufox 反检测浏览器，**v0.9.0 约 50 个工具，统一 API**）：
 - 源码级插桩 `instrumentation(action='install', mode="ast")` — MCP 侧 esprima 实现，挑战页可用
 - 签名安全观察 `hook_jsvmp_interpreter(mode="transparent")` — 仅 prototype getter 替换
 - Cookie 归因 `analyze_cookie_sources` — 区分 Set-Cookie 与 document.cookie
@@ -205,12 +213,12 @@ python main.py
 | `list_network_requests` / `get_network_request` | 列出/获取捕获的请求 |
 | `get_request_initiator` | 获取发起请求的 JS 调用栈（黄金路径） |
 | `intercept_request` | 拦截/修改/Mock 网络请求 |
-| `cookies(action='get'\|'set'\|'delete')` | Cookie 管理 |
+| `cookies(action='get'\|'set')` / `delete_cookies` | Cookie 管理 |
 | `compare_env` | 全面收集浏览器环境，用于补环境对照 |
 | `verify_signer_offline` | 用真实样本离线验证签名代码 |
 | `evaluate_js` | 在页面执行任意 JS |
 | `export_state` / `import_state` | 保存/恢复浏览器状态 |
-| `check_environment` / `reset_browser_state` | 环境自检 / 清理残留状态 |
+| `get_session_info` / `remove_hooks` / `network_capture(action='stop')` / `stop_intercept` | 会话自检 / 清理残留状态 |
 
 详见 SKILL.md 的「核心武器」和「工具使用最佳实践」章节。
 
@@ -246,7 +254,7 @@ python main.py
 - **vm** (内置): 沙箱执行
 - **WebAssembly** (内置): WASM 加载
 - **http2** (内置): HTTP/2 请求
-- **playwright-core**: 浏览器自动化
+- **playwright-core**: 浏览器自动化（仅分析/验证）
 
 ### Python
 - **requests** / **httpx**: HTTP 请求（httpx 支持 HTTP/2）
@@ -258,7 +266,7 @@ python main.py
 - **curl_cffi**: 带浏览器 TLS 指纹模拟的 HTTP 客户端
 
 ### 调试工具
-- **[camoufox-reverse MCP](https://github.com/WhiteNightShadow/camoufox-reverse-mcp) v1.0.0**: 反检测浏览器逆向分析（32 个核心工具，统一 API，含源码级插桩 + Cookie 归因分析）
+- **[camoufox-reverse MCP](https://github.com/WhiteNightShadow/camoufox-reverse-mcp) v0.9.0**: 反检测浏览器逆向分析（约 50 个工具，统一 API，含源码级插桩 + Cookie 归因分析）
 
 ## 版本记录
 

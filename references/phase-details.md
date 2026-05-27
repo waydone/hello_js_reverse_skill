@@ -151,20 +151,19 @@ MCP 操作：
     → 本次目标应是替换为协议方案
 ```
 
-### 分支 3：有历史 session
+### 分支 3：有历史 case
 
 ```
 MCP 操作：
-  attach_domain_readonly("<eTLD+1>")     # 在 CHECK-3 已做
-  verify_assertion(assertion_id='*')     # 批量验证所有断言
-  <!-- v3.1.0: migrated from reverify_all_assertions_on_domain -->
+  读 cases/README.md 的高频站点速查表
+  读命中的 cases/<case>.md
 
-  根据 triage.interpretation：
-    "all assertions still hold"
+  根据 case 的可验证事实清单手动核对：
+    "关键事实仍成立"
       → 跳到 Phase 5 直接验证旧协议代码
 
-    "Minor update"
-      → 工作范围 = failed_ids，只修这几条
+    "局部事实失效"
+      → 工作范围 = 失效事实对应的路径，只修这些分支
 
     "Moderate L4 change"
       → Phase 1-4 走一遍，但 passed 的是 invariants
@@ -525,7 +524,7 @@ MCP 操作：
 
 ---
 
-## Phase 5：断言驱动交付（v2.9.0 升级）
+## Phase 5：证据驱动交付
 
 ### 5.1 运行验证
 
@@ -535,20 +534,20 @@ MCP 操作：
   2. 与浏览器实际数据交叉验证（≥ 5 次请求，确认签名稳定性）
 ```
 
-### 5.2 写入/更新域级 Session 档案
+### 5.2 生成/更新 case 经验
 
 ```
 MCP 操作：
-  a. 将本次分析的断言集写入 assertions.json
+  a. 将本次分析的可验证事实写入 case 文件
      至少包含：script_exists / anti_crawl_type / cookie_names
 
-  b. 更新 session.json 的 hot_keys_snapshot 和 cookie_attribution_summary
+  b. 记录 hot_keys_snapshot 和 cookie_attribution_summary
 
-  c. 更新 fingerprint.json（如有新的指纹采集数据）
+  c. 记录 fingerprint 摘要（如有新的指纹采集数据）
 
-  d. 更新 assertions_passed / assertions_failed / assertions_total
+  d. 标明哪些事实已验证、哪些事实待复核
 
-  e. 输出："域级 Session 档案已更新，N 条断言已写入，下次分析同域时将自动复用"
+  e. 输出："case 经验已更新，N 条可验证事实已写入，下次分析同域时先复用该案例"
 ```
 
 ### 5.3 生成 README.md
@@ -576,7 +575,7 @@ MCP 操作：
 | 可运行的 main.js / main.py | ✅ | 纯协议脚本，无浏览器依赖 |
 | config/ 目录 | ✅ | 密钥、Headers、JS 代码等配置 |
 | README.md | ✅ | 项目说明 + 接口分析记录 |
-| Session 档案更新 | ✅ | 断言集 + 指纹快照 + Cookie 归因 |
+| case 经验更新 | 推荐 | 可验证事实 + 指纹快照 + Cookie 归因 |
 | cases/ 经验沉淀 | 推荐 | 主动询问用户 |
 | ≥ 5 次请求验证 | ✅ | 确认签名稳定性 |
 

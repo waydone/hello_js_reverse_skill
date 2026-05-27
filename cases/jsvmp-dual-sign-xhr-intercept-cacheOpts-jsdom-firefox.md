@@ -96,7 +96,7 @@
 ### Phase 1：网络捕获定位接口
 
 ```
-步骤 1: start_network_capture(capture_body=True) + 触发业务操作
+步骤 1: network_capture(action='start', capture_body=True) + 触发业务操作
 步骤 2: list_network_requests → 捕获带 X-Bogus 和 X-Gnarly 的请求
 步骤 3: search_code(keyword="bdms") → 找到三个关键脚本 CDN 地址：
         - webmssdk.es5.js (387KB) — JSVMP 签名引擎

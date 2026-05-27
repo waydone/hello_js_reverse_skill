@@ -1,17 +1,9 @@
 ---
 name: hello_js_reverse_skill
 description: >
-  Node.js / Python 接口自动化与签名还原工程技能：对自有平台或已授权平台的 Web API 进行签名分析与接口对接，
-  通过 Camoufox 反检测浏览器动态调试与静态源码分析，定位并还原前端加密/签名逻辑，
-  使用 Node.js 或 Python 实现算法复现与自动化接口调用。
-  深度集成 camoufox-reverse MCP（C++ 引擎级指纹伪装，35 个逆向分析工具）。
-  擅长 JSVMP 虚拟机保护的双路径攻克：路径 A 算法追踪（Hook / 插桩 / 日志分析 / 源码级插桩四板斧），
-  路径 B 环境伪装（jsdom/vm 沙箱 + 浏览器环境采集对比 + 全量补丁）。
-  v3.0.0 硬约束 Checklist + 红线四条 + 经验法则压缩。
-  v3.1.0 SKILL.md 瘦身（核心层 + references/ 按需加载），工具引用对齐 MCP 合并 API。
-  v3.2.0 移除 MCP session 依赖，Checklist 从五项压缩到三项，cases/ 成为唯一经验库。
-  v3.3.0 核心层回归扩容：Phase 1-5 详细动作 + 10 个场景速查 + 经验法则回迁核心层。
-  v3.3.1 经验法则精简至 22 条：移除单站点经验，合并 evaluate_js 规则。
+  Use when a task involves authorized Web API signature analysis, encrypted parameters, dynamic cookies,
+  obfuscated JS/WASM/JSVMP, anti-bot browser environment checks, or protocol-level Node.js/Python reproduction.
+  Use when camoufox-reverse MCP evidence gathering, Hook tracing, source instrumentation, or offline signer verification is needed.
 argument-hint: "<目标URL> [需要分析的加密参数名, 如 sign, m, token]"
 ---
 
@@ -26,12 +18,11 @@ AI 输出格式（必须以此结构复述并填空）：
 ```text
 ═══ SKILL 启动 Checklist（v3.2.0）═══
 
-[CHECK-1] MCP 版本检查 + 环境自检
-  调用: check_environment()
-  结果: MCP 版本 = ______
-        esprima 已装 = ______
-        playwright 已装 = ______
-        browser 状态 = ______ (not started / running / running with residuals)
+[CHECK-1] MCP 会话状态自检
+  调用: get_session_info()
+  结果: session 状态 = ______
+        browser 状态 = ______ (not started / running / unknown)
+        active hooks/routes/network capture = ______ (none / active / unknown)
   通过: YES / NO
 
 [CHECK-2] 经验库速查（本 skill 仓库的 cases/ 目录是唯一的经验库）
@@ -60,8 +51,9 @@ AI 输出格式（必须以此结构复述并填空）：
   命中结果:
     - 命中案例 = ______ (case 文件名 or "未命中")
     - 若命中 → 方案方向以速查表为准，按 SKILL.md 的路径 A/B 方法论执行；
-               如能访问 skill 仓库 cases/ 则读对应 case 文件获取详细踩坑记录（加分项，非必需）
-    - 若未命中 → 走标准 Phase 1-5，分析结束时沉淀新案例
+               必须从 skill 仓库 cases/ 读取对应 case 文件获取详细踩坑记录；
+               如果无法读取，明确报错并暂停，不要把内嵌速查表当作完整案例
+    - 若未命中 → 走标准 Phase 1-5，分析结束时在 Phase 5 询问用户是否沉淀新案例
 
 [CHECK-3] 最终方案意图声明（用户面向）
   本次目标: ______ (一句话)
@@ -76,7 +68,7 @@ AI 输出格式（必须以此结构复述并填空）：
 
 如果 [CHECK-1] 失败 → 停止，让用户先确认 MCP 环境
 如果 [CHECK-2] 命中已有案例 → 从 skill 仓库 cases/ 读取该 case 文件，优先复用
-如果 [CHECK-2] 未命中 → 记录本次分析结束时要沉淀新 case 文件到 skill 仓库 cases/
+如果 [CHECK-2] 未命中 → 记录本次分析结束时要在 Phase 5 询问用户是否沉淀新 case 文件
 [CHECK-3] 意图声明必须明确，防止后续滑坡到浏览器方案
 
 ---
@@ -187,11 +179,11 @@ AI 输出格式（必须以此结构复述并填空）：
 **JS 执行**：evaluate_js
 **脚本**：scripts(action='list'|'get'|'save') / search_code(keyword, script_url=None)
 **Hook**：hook_function(mode='intercept'|'trace') / inject_hook_preset / remove_hooks / get_console_logs
-**网络**：network_capture(action='start'|'stop'|'clear'|'status') / list_network_requests / get_network_request / get_request_initiator / intercept_request
+**网络**：network_capture(action='start'|'stop') / list_network_requests / get_network_request / get_request_initiator / intercept_request
 **JSVMP**：hook_jsvmp_interpreter / instrumentation(action='install'|'log'|'stop'|'reload'|'status') / compare_env
-**Cookie 与存储**：cookies(action='get'|'set'|'delete') / get_storage / export_state / import_state
+**Cookie 与存储**：cookies(action='get'|'set') / delete_cookies / get_storage / export_state / import_state
 **验证**：verify_signer_offline(signer_code, samples=[...])
-**环境与自检**：check_environment / reset_browser_state
+**环境与自检**：get_session_info / get_fingerprint_info / check_detection
 
 ---
 
@@ -225,7 +217,7 @@ launch_browser(headless=false, enable_trace=true)
 - 行为型反爬可以用 `pre_inject_hooks` 在首次导航时就装好 Hook
 - Cookie 写入后必须 `reload()` 使其生效，然后 `evaluate_js("document.cookie")` 验证
 - 如果页面有反调试（debugger 陷阱），第一时间 `inject_hook_preset(preset="debugger_bypass")`
-- 浏览器状态有残留时用 `reset_browser_state()` 清理（清 Hook / 清网络捕获 / 清路由）
+- 浏览器状态有残留时按需 `remove_hooks()`、`network_capture(action='stop')`、`stop_intercept()`；需要干净浏览器上下文时 `close_browser()` 后重新 `launch_browser()`
 
 ---
 
@@ -292,7 +284,7 @@ project_name/
 > 这里是 Phase 0 完成后做**二次确认和深入**：
 >
 > - 如果 [CHECK-2] 命中某个 case → 本步骤详读该 case，按其"已验证定位路径"执行
-> - 如果 [CHECK-2] 未命中 → 本步骤做**指纹采集**，分析结束时沉淀新 case
+> - 如果 [CHECK-2] 未命中 → 本步骤做**指纹采集**，分析结束时在 Phase 5 询问用户是否沉淀新 case
 
 #### 0.5.1 命中某个 case 的行为
 
@@ -335,7 +327,7 @@ search_code(keyword="X-Gnarly")         # TikTok 国际版
 search_code(keyword="acw_sc__v2")       # Aliyun WAF
 ```
 
-采集完成后，**本次分析结束时必须沉淀**：
+采集完成后，继续走标准 Phase 1-5。分析结束时必须在 Phase 5 **询问用户是否沉淀**；用户同意后再执行：
 1. 按 `cases/_template.md` 格式建立 `cases/<新案例>.md`
 2. 更新 `cases/README.md` 的"高频站点速查表"追加一行
 
@@ -635,44 +627,44 @@ Actions:
 
 #### 3.0 环境指纹采集（路径 B 核心突破点）
 
-> v3.4.0 新增。用于路径 B 环境伪装时精准确定"JSVMP 读了哪些属性"。
+> MCP v0.9.0 中，属性访问追踪使用 `hook_jsvmp_interpreter(mode='proxy', trackProps=True)`。
+> 用于路径 B 环境伪装时精准确定"JSVMP 读了哪些属性"。
 
 ```
-判断 camoufox-reverse 定制版是否可用：
-  check_environment() → camoufox_reverse.installed
+判断当前反爬类型和 Hook 可用性：
+  get_session_info() → 浏览器 / 会话 / 网络捕获状态
 
-├─ YES（已装定制版 + trace_active）
+├─ 行为型反爬，且 Proxy Hook 不会破坏签名
 │   → close_browser() 关闭当前浏览器（如已启动）
 │   → launch_browser(enable_trace=True)
 │   → navigate(url="目标页面")
-│   → trace_property_access(duration=0, mode="summary", collect_values=True)
-│   → 获得 JSVMP 实际读取的属性列表 + 真实值（精准，C++ 层拦截，JSVMP 不可检测）
-│   → collect_values=True 自动从浏览器读取所有属性的真实值
-│     （大值如 Canvas dataURL、WebGL extensions 自动保存到 ~/.cache/camoufox-reverse/values/）
-│   → 只补这些属性（狙击式补环境）
+│   → hook_jsvmp_interpreter(mode='proxy', trackProps=True, persistent=True)
+│   → 触发目标请求 / 签名流程
+│   → get_jsvmp_log(type_filter='prop_read')
+│   → 获得 JSVMP 实际读取的属性列表，按访问热度优先补环境
 │
-└─ NO（官方 Camoufox 或未启用 trace）
-    → compare_env() + 分批 evaluate_js 采集
+└─ 签名型反爬，或 Proxy Hook 会破坏签名
+    → hook_jsvmp_interpreter(mode='transparent', persistent=True) 或 instrumentation(action='install', mode='ast')
+    → compare_env() + 分批 evaluate_js 采集真实值
     → 与 jsdom 环境全量 diff
-    → 按影响分级修复（撒网式补环境）
-    → 此为 v3.3.0 的传统流程，未破坏
+    → 按影响分级修复
 ```
 
-**为什么引擎层 trace 更精准**：
-- `trace_property_access` 返回的是 JSVMP **实际访问过**的属性，按热度排序
+**为什么属性读取追踪更精准**：
+- `hook_jsvmp_interpreter(mode='proxy', trackProps=True)` 返回的是 JSVMP **实际访问过**的属性，按热度排序
 - `compare_env` 返回的是"所有不同的属性"，其中大部分 JSVMP 根本不读
-- 两者输出量级差异：trace 通常 30-50 项；compare_env 通常几百项
+- 两者输出量级差异：属性读取追踪通常 30-50 项；compare_env 通常几百项
 
-**多视图查询**（按需深入）：
+**查询重点**（按需深入）：
 
-| mode | 用途 | 场景 |
+| 数据 | 用途 | 场景 |
 |---|---|---|
-| summary（默认） | 属性热度统计 | 补环境时看"要补哪些" |
-| timeline | 按时间分桶 | 看"什么时候访问什么"，定位检测阶段 |
-| sequence | 按顺序返回事件 | 看"访问顺序"，重建检测逻辑 |
-| search | 搜索特定字符串 | 找"有没有访问 cookie / canvas / userAgent" |
+| `get_jsvmp_log(type_filter='prop_read')` | 属性热度统计 | 补环境时看"要补哪些" |
+| `get_jsvmp_log(type_filter='call')` | 方法调用统计 | 看"调用了哪些原生方法" |
+| `instrumentation(action='log', type_filter='tap_get')` | 源码插桩属性读取 | Proxy 不安全时替代追踪 |
+| `compare_env` | 全量环境差异 | 追踪覆盖不足时补齐基准 |
 
-**定制版安装**：从 https://github.com/WhiteNightShadow/camoufox-reverse/releases 下载对应平台 zip，替换 Camoufox 缓存目录。不装对其他 32 个工具无影响。
+**工具可用性**：以 `references/mcp-tool-reference.md` 当前清单为准；运行状态用 `get_session_info()` 确认。属性追踪不可用时，降级到 `compare_env()` + 分批 `evaluate_js`，不影响 MCP v0.9.0 的约 50 个工具。
 
 #### 3.1 Hook 注入验证
 
@@ -736,8 +728,10 @@ Actions:
 | A: 纯算法还原 | 加密逻辑可完整提取，无浏览器环境依赖 | `templates/node-request/` | `templates/python-request/` |
 | B: 沙箱执行 JS | 服务端返回混淆 JS 用于生成 Cookie/Token | `templates/vm-sandbox/` | `templates/python-request/`（用 `execjs`） |
 | C: WASM 加载还原 | 加密逻辑在 WebAssembly 中实现 | `templates/wasm-loader/` | — |
-| D: 浏览器自动化 | TLS 指纹检测、复杂环境依赖 | `templates/browser-auto/` | — |
+| D: 浏览器自动化（仅分析/验证） | TLS 指纹检测、复杂环境依赖定位 | `templates/browser-auto/`（分析工具，不作为最终交付） | — |
 | E: jsdom 环境伪装 | JSVMP 深度绑定环境指纹、算法不可提取 | jsdom + `references/jsdom-env-patches.md` | — |
+
+> Phase 4D 的浏览器自动化只能用于分析、定位和验证问题来源；最终交付仍必须是纯协议脚本或可脱离浏览器运行的环境伪装方案。
 
 #### 4.3 编码原则
 
@@ -749,7 +743,7 @@ Actions:
 6. **逐步验证**：每次只增加一个参数的实现，确保每步可独立验证
 7. **代码可运行**：提供的代码必须是可直接复制运行的，不留占位符
 8. **分析产物持久化**：长参数值、Cookie、JS 代码片段、请求样本等，第一时间写入 `config/` 目录
-9. **环境伪装最小化**：env-patch 只补经 `hook_function(mode='trace')` 证明 JSVMP 真的读了的 API，禁止"先加上保险"
+9. **环境伪装最小化**：env-patch 只补经 `hook_jsvmp_interpreter(mode='proxy', trackProps=True)`、`instrumentation(action='log')` 或 `hook_function(mode='trace')` 证明 JSVMP 真的读了的 API，禁止"先加上保险"
 10. **UA 自洽**：环境补丁的每一项都必须与 `navigator.userAgent` 声明的浏览器一致
 
 #### 4.4 配置文件策略
@@ -878,7 +872,7 @@ Actions:
 
 梯度 5: 合法出口
   → 写"卡在哪 / 已知什么 / 需要什么外部信息"的报告
-  → 本次分析产出保存到 cases/ 新案例（即便是"踩坑案例"也值得记录）
+  → 在 Phase 5 询问用户是否把本次分析产出保存到 cases/ 新案例（即便是"踩坑案例"也值得记录）
 ```
 
 **禁止**：跳过中间梯度直接用浏览器方案（违反红线 3）
@@ -1340,7 +1334,7 @@ verify_signer_offline(
 
 | 版本 | 日期 | 要点 |
 |------|------|------|
-| v3.4.0 | 2026-04-22 | Phase 3 新增引擎层追踪分支（trace_property_access）。依赖 camoufox-reverse 定制版浏览器 + MCP v1.1.0。装了定制版后补环境从"全量 diff"升级到"精准 trace"，未装定制版自动降级到 compare_env，无破坏性变化。JS 层零痕迹，JSVMP 不可检测 |
+| v3.4.0 | 2026-04-22 | Phase 3 新增属性读取追踪分支；当前 MCP v0.9.0 使用 `hook_jsvmp_interpreter(mode='proxy', trackProps=True)`，不可用时自动降级到 compare_env |
 | v3.3.1 | 2026-04-19 | 经验法则精简至 22 条：移除单站点经验，合并 evaluate_js 规则 |
 | v3.3.0 | 2026-04-19 | 核心层回归扩容：Phase 1-5 详细动作 + 10 个场景速查 + 经验法则回迁核心层 |
 | v3.2.0 | 2026-04-18 | 移除 MCP session 依赖，Checklist 压缩到三项，cases/ 成为唯一经验库 |

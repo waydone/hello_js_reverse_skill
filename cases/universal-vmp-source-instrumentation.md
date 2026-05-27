@@ -4,7 +4,7 @@
 >
 > 使用方式：
 >
-> 1. 在 Phase 0.5 指纹匹配时，若检测到 VMP 特征（`find_dispatch_loops` 返回 case_count > 50），直接走本案例的「已验证定位路径」
+> 1. 在 Phase 0.5 指纹匹配时，若检测到 VMP 特征（`search_code(keyword='switch', script_url=<该文件>, context_chars=500)` 命中 while/switch 分发循环），直接走本案例的「已验证定位路径」
 > 2. 完成一次具体站点逆向后，复制本文件重命名为 `vmp-<具体技术特征>.md`，按真实站点数据填充 `[填入...]` 占位符，加入 cases/README.md 索引
 
 ---
@@ -13,7 +13,7 @@
 
 - **JS 特征**：
   - 单 JS 文件 100KB+，通常命名模式为 `sdenv-*.js` / `FuckCookie_*.js` / `webmssdk.es5.js` / `sensor_data.js` / `akam/xxx.js` / `a_bogus.js`
-  - `find_dispatch_loops(script_url=<该文件>)` 返回 `case_count > 50` 的候选
+  - `search_code(keyword='switch', script_url=<该文件>, context_chars=500)` 命中 while/switch 分发循环，且上下文中 case 分支密集
   - 含超大字节码数组（`var X = [3,15,7,22,...]`，长度 1000+）
   - 含 `while(true){switch(...)}` 或 `while(!![]){switch(...)}` 解释器循环
 - **参数特征**：
@@ -48,7 +48,7 @@
 ```
 Step 1 — launch + 抓包
   launch_browser(headless=False)
-  start_network_capture(capture_body=True)
+  network_capture(action='start', capture_body=True)
 
 Step 2 — 首次导航
   若是首屏挑战站点：
@@ -64,11 +64,11 @@ Step 2 — 首次导航
 Step 3 — 定位 VMP 脚本
   list_network_requests(resource_type="script")
   → 找 size 最大的 JS，记 URL 为 <VMP_URL>
-  find_dispatch_loops(script_url=<VMP_URL>, min_case_count=20)
-  → 确认 case_count > 50
+  search_code(keyword='switch', script_url=<VMP_URL>, context_chars=500)
+  → 确认 while/switch 分发循环和密集 case 分支
 
 Step 4 — 装源码级插桩
-  instrument_jsvmp_source(
+  instrumentation(action='install',
     url_pattern="[填入 glob，如 **/sdenv-*.js]",
     mode="ast",
     tag="vmp1",
@@ -84,7 +84,7 @@ Step 5 — 装兜底 hook（若 Step 2 没走 pre_inject_hooks）
   hook_jsvmp_interpreter(script_url="[VMP basename]")
   # 注意：本案例针对的是"通用"场景（含签名型和行为型）。如果目标是签名型反爬
   # （RS/Akamai），不要这样用 hook_jsvmp_interpreter，改为：
-  #   - instrument_jsvmp_source(mode="ast")  （首选）
+  #   - instrumentation(action='install', mode="ast")  （首选）
   #   - hook_jsvmp_interpreter(mode="transparent")  （备选）
   # 参考 SKILL.md "反爬类型识别与工具选择" 章节
   bypass_debugger_trap()
@@ -200,7 +200,7 @@ function genSign(input) {
 | RS 6 | 脚本名每次不同 + 多层 VMP | 先 `list_network_requests` 找所有 100KB+ JS，逐个 instrument（tag 区分） |
 | Akamai sensor_data | `_abck` / `bm_sz` cookie | 重点看 `hot_keys` 中 touch/mouse 事件相关属性 |
 | webmssdk（短视频平台） | 配合 msToken 预热 | 需先让 `/v1/generate_token` 预热接口完成再触发业务 |
-| obfuscator.io（开源） | case 数可能只有 20-30 | `find_dispatch_loops(min_case_count=15)` |
+| obfuscator.io（开源） | case 数可能只有 20-30 | `search_code(keyword='switch', script_url=<url>, context_chars=500)` |
 
 ---
 
@@ -208,6 +208,6 @@ function genSign(input) {
 
 作为 Phase 0.5 指纹匹配的备选路径，本案例应命中以下任一条件即触发"尝试源码级插桩"：
 
-- **高权重（直接走）**：`find_dispatch_loops` 返回 case_count > 50
+- **高权重（直接走）**：`search_code(keyword='switch', script_url=<url>, context_chars=500)` 命中 while/switch 分发循环且 case 分支密集
 - **中权重（优先试）**：单 JS > 200KB + 含 while-switch + 参数长度 128/192/256 + Base64 变体
 - **低权重（参考）**：Cookie 中有 acw_tc / FSSBBIl1 / _abck / ak_bmsc / ttwid / msToken 等已知模式字段

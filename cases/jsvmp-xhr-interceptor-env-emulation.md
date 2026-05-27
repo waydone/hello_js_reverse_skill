@@ -51,7 +51,7 @@
   - search_code(keyword="byted_acrawler") → 命中 → 直接定位本案例
   - search_code(keyword="_SdkGlueInit") → 命中 → 直接定位本案例
   - search_code(keyword="a_bogus") → 命中 + 参数长度 180-192 → 高置信度
-  - list_scripts → 存在 380KB+ 文件 → 辅助确认
+  - scripts(action='list') → 存在 380KB+ 文件 → 辅助确认
   匹配判定：以上前 3 项命中任意 1 项 → 高置信度匹配
 ```
 
@@ -193,7 +193,7 @@ grep -c "userAgentData\|navigator\.connection\|getBattery\|window\.chrome\|perfo
 ### Phase 1：网络捕获定位接口
 
 ```
-步骤 1: start_network_capture + list_network_requests → 捕获带 a_bogus 的完整请求 URL
+步骤 1: network_capture(action='start') + list_network_requests → 捕获带 a_bogus 的完整请求 URL
 步骤 2: search_code(keyword="bdms") → 找到三个关键脚本的 CDN 地址：
         - webmssdk.es5.js (v1.0.0.20, 387KB) — JSVMP 签名引擎
         - bdms.js (v1.0.1.19, 147KB) — ByteDance Monitoring System

@@ -125,14 +125,12 @@ async function generateAcSignature(nonce) {
 ### 正确做法
 
 ```
-激活 skill 后第一件事：在对话中输出硬约束 Checklist 五项复述
-  [CHECK-1] check_environment() → 贴结果
+激活 skill 后第一件事：在对话中输出硬约束 Checklist 三项复述
+  [CHECK-1] get_session_info() → 贴结果
   [CHECK-2] 读 cases/README.md 速查表 + listDirectory 工作区 → 命中记录
-  [CHECK-3] list_sessions() → 历史 session 记录
-  [CHECK-4] start_reverse_session() → domain + run_id 记录
-  [CHECK-5] 最终方案意图声明
+  [CHECK-3] 最终方案意图声明
 
-五项都通过，再调 launch_browser
+三项都通过，再调 launch_browser
 ```
 
 ### 判定测试
@@ -198,12 +196,12 @@ listDirectory(".")
 
 看 SKILL.md 第五条原则的降级梯度表：
 ```
-梯度 0: 本域是否有历史 session? → attach_domain_readonly + reverify
-梯度 1: get_session_snapshot 看本 run 做过什么
+梯度 0: 本域是否有历史 case? → 读 cases/README.md 和命中的 case 文件
+梯度 1: 回看本轮已有证据 → list_network_requests / instrumentation(action='log') / get_jsvmp_log
 梯度 2: 换 Hook 模式 (proxy ↔ transparent) / 换插桩模式 (ast ↔ regex)
 梯度 3: 点对点 hook_function 针对具体签名函数
 梯度 4: 路径 B 的其他变体（vm 沙箱 / jsdomFromUrl 全量加载 / sdenv）
-梯度 5: 合法出口: stop_reverse_session("suspended") + export_session + 写报告
+梯度 5: 合法出口: 写"卡在哪 / 已知什么 / 需要什么外部信息"的报告，并询问是否沉淀 cases/
 
 禁止跨梯度直接到"用浏览器兜底"
 ```
@@ -247,7 +245,7 @@ AI 在复盘时能流利背出：
 ## 贡献新反模式
 
 每次实战失败后，如果发现 skill 里没覆盖的新反模式：
-1. 走 `retrospective-prompt.md` 做完整复盘
+1. 按本文档的反模式模板做完整复盘
 2. 按本文档的"反模式 N：XXX"格式追加一条
 3. 更新 CHANGELOG
 4. commit 时标注 `doc(pitfall): add pitfall #N from <site> retrospective`

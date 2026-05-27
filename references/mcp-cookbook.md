@@ -53,7 +53,7 @@
 | **分发循环扫描** | `search_code(keyword='switch', script_url=..., context_chars=500)` | **[v0.4.0]** 定位字节码分发函数（while+switch，case 数过滤） | <!-- v3.1.0: migrated from find_dispatch_loops -->
 | **源码级插桩** | `instrumentation(action='install', ...)` | **[v0.4.0]** HTTP 层改写 VMP，每个 obj[key]/fn(args) 插入 tap（通用 VMP 利器） | <!-- v3.1.0: migrated from instrument_jsvmp_source -->
 | **插桩日志** | `instrumentation(action='log', ...)` | **[v0.4.0]** 拉取源码插桩日志，带 hot_keys/hot_methods/hot_functions 摘要 | <!-- v3.1.0: migrated from get_instrumentation_log -->
-| **插桩状态** | `check_environment()` / `instrumentation(action='stop', ...)` | **[v0.4.0]** 查看/停止源码插桩 | <!-- v3.1.0: migrated from get_instrumentation_status / stop_instrumentation -->
+| **插桩状态** | `instrumentation(action='status')` / `instrumentation(action='stop', ...)` | **[v0.4.0]** 查看/停止源码插桩 | <!-- v3.1.0: migrated from get_instrumentation_status / stop_instrumentation -->
 | **Cookie 归因** | `analyze_cookie_sources` | **[v0.4.0]** 融合 HTTP Set-Cookie + JS document.cookie + cookie jar |
 | **hook 重载** | `instrumentation(action='reload')` | **[v0.4.0]** 重载使 persistent hook 先于页面 JS 执行（+ 清日志） | <!-- v3.1.0: migrated from reload_with_hooks -->
 | **运行时探针日志** | `get_runtime_probe_log` | **[v0.4.0]** 获取 runtime_probe 预设的广谱事件日志 |
@@ -511,7 +511,7 @@ await navigate(url, pre_inject_hooks=["jsvmp_probe_transparent"])
   → summary.hot_methods 是 VMP 调用的方法 top 30（ObjectType.methodName 格式）
 
 # 5. 查看插桩状态
-[camoufox-reverse] check_environment() <!-- v3.1.0: migrated from get_instrumentation_status -->
+[camoufox-reverse] instrumentation(action='status') <!-- v3.1.0: migrated from get_instrumentation_status -->
 
 # 6. 完工移除
 [camoufox-reverse] instrumentation(action='stop', url_pattern="**/sdenv-*.js") <!-- v3.1.0: migrated from stop_instrumentation -->
@@ -538,7 +538,7 @@ await instrumentation(action='install', url_pattern="**/sdenv-*.js", <!-- v3.1.0
 )
 
 # 查看实际走了哪条路径
-status = await check_environment() <!-- v3.1.0: migrated from get_instrumentation_status -->
+status = await instrumentation(action='status') <!-- v3.1.0: migrated from get_instrumentation_status -->
 # status["active_patterns"][0]["last_mode_used"] == "ast" (正常)
 #   or "regex (fallback)" (esprima 对该 VMP 的语法支持不全)
 #   or "ast_page" (你显式用了 deprecated 模式)
@@ -627,6 +627,6 @@ await instrumentation(action='install', url_pattern="**/vmp.js", mode="ast_page"
 | 网络 | `network_capture(action='start', ...)` `network_capture(action='stop')` `list_network_requests` `get_network_request` `get_request_initiator` `intercept_request` `stop_intercept` | 网络分析（支持响应体捕获） | <!-- v3.1.0: migrated from start_network_capture, stop_network_capture -->
 | 存储 | `cookies(action='get', ...)` `cookies(action='set', ...)` `delete_cookies` `get_storage` `set_storage` `export_state` `import_state` | 状态管理 | <!-- v3.1.0: migrated from get_cookies, set_cookies -->
 | 反检测 | `get_fingerprint_info` `check_detection` `bypass_debugger_trap` | 指纹与反检测 |
-| 源码级插桩 | `instrumentation(action='install', ...)` `instrumentation(action='log', ...)` `check_environment()` `instrumentation(action='stop', ...)` `search_code(keyword='switch', script_url=..., context_chars=500)` | **[v0.4.0]** 通用 JSVMP 逆向利器 | <!-- v3.1.0: migrated from instrument_jsvmp_source, get_instrumentation_log, get_instrumentation_status, stop_instrumentation, find_dispatch_loops -->
+| 源码级插桩 | `instrumentation(action='install', ...)` `instrumentation(action='log', ...)` `instrumentation(action='status')` `instrumentation(action='stop', ...)` `search_code(keyword='switch', script_url=..., context_chars=500)` | **[v0.4.0]** 通用 JSVMP 逆向利器 | <!-- v3.1.0: migrated from instrument_jsvmp_source, get_instrumentation_log, get_instrumentation_status, stop_instrumentation, find_dispatch_loops -->
 | Cookie 归因 | `analyze_cookie_sources` | **[v0.4.0]** HTTP Set-Cookie + JS 写入融合分析 |
 | 导航增强 | `navigate(pre_inject_hooks)` `instrumentation(action='reload')` `get_runtime_probe_log` | **[v0.4.0]** 首屏挑战/hook 重注入/运行时探针 | <!-- v3.1.0: migrated from reload_with_hooks -->

@@ -2,7 +2,7 @@
 
 > **说明**：SKILL.md 核心层有工具分类索引，这里是详细版 + MCP v0.9.0 的迁移映射
 >
-> **版本**：v3.1.0（MCP v0.9.0 工具名迁移）
+> **版本**：v3.2.0（MCP v0.9.0 工具名迁移 + Session/Assertion 工具移除）
 >
 > **当前 MCP 版本**：camoufox-reverse MCP v0.9.0（~50 个工具，从 v0.8.x 的 ~80 个合并而来）
 
@@ -91,28 +91,6 @@
 | `instrumentation(action='reload')` <!-- v3.1.0: migrated from reload_with_hooks --> | 重载页面让 hooks 先于 VMP 生效 |
 | `analyze_cookie_sources` | Cookie 归因分析（HTTP vs JS 来源） |
 
-### Session — 域级 Session 档案
-
-| 工具名（v0.9.0） | 一行描述 |
-|-------------------|---------|
-| `start_reverse_session` | 启动新的分析 run |
-| `stop_reverse_session` | 结束当前 run |
-| `get_session_snapshot` | 获取活跃 session 快照 |
-| `list_sessions` | 列出所有域 session 档案 |
-| `attach_domain_readonly` | 只读附加已有域档案 |
-| `export_session` | 导出域档案为 zip |
-| `import_session` | 导入域档案 zip |
-
-### Assertion — 断言系统
-
-| 工具名（v0.9.0） | 一行描述 |
-|-------------------|---------|
-| `add_assertion` | 注册域级断言 |
-| `verify_assertion(assertion_id=...)` | 验证单条断言 |
-| `verify_assertion(assertion_id='*')` <!-- v3.1.0: migrated from reverify_all_assertions_on_domain --> | 批量验证所有断言 |
-| `list_assertions` | 列出域上的所有断言 |
-| `remove_assertion` | 软删除断言 |
-
 ### Environment — 存储与指纹
 
 | 工具名（v0.9.0） | 一行描述 |
@@ -128,13 +106,19 @@
 | `check_detection` | 在反检测站点测试是否被识别 |
 | `get_session_info` | 查看当前会话状态全貌 |
 
+### Verification — 离线验证
+
+| 工具名（v0.9.0） | 一行描述 |
+|-------------------|---------|
+| `verify_signer_offline` | 用用户提供的真实样本离线验证签名代码 |
+
 ---
 
 ## 二、v0.8.x → v0.9.0 完整迁移表
 
-> MCP v0.9.0 将 ~80 个工具合并为 ~50 个，核心变化是将同类操作合并为带 `action` 参数的统一接口。
+> MCP v0.9.0 将大量独立工具合并为统一接口，核心变化是将同类操作合并为带 `action` 参数的统一接口。
 
-### 19 个工具合并为 7 个统一接口
+### 统一接口迁移
 
 | v0.8.x 旧名 | v0.9.0 新名 | 说明 |
 |-------------|-------------|------|
@@ -152,7 +136,6 @@
 | `list_scripts(...)` | `scripts(action='list', ...)` | 脚本管理统一接口 |
 | `get_script_source(url)` | `scripts(action='get', url=url)` | |
 | `save_script(url, path)` | `scripts(action='save', url=url, save_path=path)` | |
-| `reverify_all_assertions_on_domain()` | `verify_assertion(assertion_id='*')` | 批量验证合并到 verify_assertion |
 | `find_dispatch_loops(url)` | `search_code(keyword='switch', script_url=url, context_chars=500)` | 合并到 search_code 的高级用法 |
 | `trace_property_access(...)` | `hook_jsvmp_interpreter(mode='proxy', trackProps=True)` | 合并到 hook_jsvmp_interpreter |
 | `freeze_prototype(class, method)` | `hook_function('class.prototype.method', mode='intercept', ...)` | 合并到 hook_function |
@@ -171,9 +154,9 @@
 | `get_response_chain` | `navigate()` 返回值中的 `redirect_chain` 字段 |
 | `get_dual_sign_data` | 组合 `list_network_requests` + `get_network_request` 手动提取 |
 | `diff_hot_keys` | 本地 JSON diff 或 `evaluate_js` 实现 |
-| `create_session` | `start_reverse_session` |
-| `load_session` | `attach_domain_readonly` + `verify_assertion(assertion_id='*')` |
-| `update_session` | `stop_reverse_session` + `add_assertion` |
+| `create_session` | 无当前 MCP 替代。经验沉淀到 cases/ 文件 |
+| `load_session` | 无当前 MCP 替代。读 cases/README.md 查已有案例 |
+| `update_session` | 无当前 MCP 替代。在 case 文件的"可验证事实清单"段维护事实 |
 
 ---
 
@@ -203,7 +186,8 @@
 ### 工具数量
 
 - v0.8.x：~80 个独立工具
-- v0.9.0：~50 个工具（19 个合并为 7 个统一接口 + 12 个删除）
+- v0.9.0：约 50 个工具（同类操作合并为统一接口，部分旧工具删除）
+- v3.2.0：Session/Assertion 档案工具不再作为当前工具使用，经验沉淀改为 `cases/` 文件
 
 ### 设计原则
 
@@ -235,10 +219,7 @@ search_response_body / get_response_body_page / search_json_path
 delete_cookies / get_storage / set_storage
 export_state / import_state
 get_fingerprint_info / check_detection / get_session_info
-start_reverse_session / stop_reverse_session / get_session_snapshot
-list_sessions / attach_domain_readonly
-export_session / import_session
-add_assertion / verify_assertion / list_assertions / remove_assertion
+verify_signer_offline
 ```
 
 ---
